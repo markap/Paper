@@ -1,0 +1,227 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath}
+\usepackage{cite}
+\begin{document}
+
+\title{Dependency Clustering Across Measurement Scales}
+\author
+{\IEEEauthorblockN{Martin Kapfhammer}
+\IEEEauthorblockN{Seminar Current Topics in Information-theoretic Data Mining Sommer 2014}
+\IEEEauthorblockN{Technical University of Munich}
+\IEEEauthorblockN{Helmholtz Zentrum M{\"u}nchen}
+\IEEEauthorblockN{martin.kapfhammer@tum.de}
+}
+
+
+\maketitle
+
+\begin{abstract}
+Cluster analysis is one of the most important techniques in data mining to gain insight into an unknown set of data objects without having any a priori knowledge. It partitions the data into subsets so that the objects of one subset are similar to each other - and dissimilar to the objects in the other groups. Even though clustering is a mature discipline, a lot of well-known techniques show drawbacks when the data consist of more than one attribute type. As soon as numerical and categorical features coexist, most clustering algorithms are inapplicable. Even if the technique is applicable, attribute dependencies occurring in most data sets are often omitted. Interpretation and visualization of the clustering results is another important feature, where improvement is still necessary. In most cases, the clustering result is useless if the user cannot understand the reasons for the grouping and therefore cannot explain the important characteristics of the data set. Additionally, a lot of clustering techniques require input parameters, e.g. the number of clusters, which is hard to define without any previous knowledge. 
+In this work, I present the paper “Dependency Clustering Across Measurement Scales”\cite{scenic} providing the algorithm Scenic to address and resolve those challenges. I explain the novel features of Scenic and compare it to state-of-the-art technologies in clustering heterogeneous data. Scenic itself allows to cluster mixed data at different scales with respect to attribute dependencies. For that purpose, data objects and attributes are embedded into a cluster-specific low-dimensional space describing the main characteristics of the data. Due to the low-dimensionality, that space is a great tool for visualization and interpretation of the data. To find the best number of clusters without any user input, Scenic uses the Minimum Description Length  (MDL) principle. MDL balances automatically between the accuracy of a cluster and the complexity of the cluster to find the best number of clusters.
+
+\end{abstract}
+
+\section{Introduction}
+In this section I give a brief overview on clustering, data types and the challenges of clustering heterogeneous data sets. I conclude with the basic ideas of Scenic.
+\\
+Real world data sets consist of a lot of objects and attributes. Due to the high-dimensionality of the data, it is hard to find useful patterns and characteristics just by looking at or plotting the data. In that case, clustering can help by partitioning the data into subsets called clusters. Data objects in one subset are similar, i.e. these points are very close to each other or can be described by similar characteristics. On the contrary, data points are dissimilar from the points contained in the other subsets. This process allows the user to find similarities and dissimilarities as well as the major characteristics and trends in large data sets without having any previous knowledge. Because of this property, clustering is also called unsupervised learning or learning by observations.
+\\
+With the gained knowledge from the clustering process, the data analysis can be continued by examining the characteristics of the data, or by concentrating only on a few clusters containing interesting features for further analysis. Apart from finding groupings, cluster analysis offers even more purposes: Due to the representation of objects as clusters, clustering can be used as data compression and data reduction technique for compressing or summarizing data sets. Another use case is outlier detection: Data points which do not belong to any of the subsets can be considered as outliers. Because of the multifaceted applications, clustering is a very popular tool in a lot of disciplines like bioinformatics, business intelligence, web search and pattern recognition.\cite{dmconcept_cluster} 
+\\
+Clustering algorithms commonly try to minimize the distance between data points in the same cluster and maximize the distance to data points in different clusters. For example, the euclidean distance is a measure to compute the distances between data objects and is used e.g. in the popular cluster algorithms K-means and K-medoids. Euclidean distance for clustering works quite well on data objects with numerical attributes. However, most real world data sets often consist of more than just numerical attributes: 1) Binary attributes like sex or medical diagnostics, 2) nominal attributes like zip codes or color and 3) ordinal attributes like rankings or grades occur frequently. There is no order between the values of binary and nominal attributes, and even though ordinal attributes can be ordered, none of them has a true zero point\cite{dmconcept_datatypes}. Thus categorical attributes have no spacing and order constraints and cannot be easily compared with numerical attributes. Therefore it is not reasonable to use distance measures like the euclidean distance for clustering heterogeneous data consisting of multi-type attributes.
+\\
+In the following sections I name nominal, binary and ordinal attributes \textit{discrete categorical attributes} and numerical values on a continuous scale \textit{continuous numerical attributes}. The same naming is used in \cite{scenic} as well.
+\\
+After explaining the difficulties which can occur when clustering heterogeneous data sets, I present the ideas of Scenic which provides solutions not only for clustering heterogeneous data but also for integrating attribute dependencies, improving visualization and interpretation and enabling parameter-free clustering.
+\\
+To get a basic idea, Figure 1 \cite{scenic} shows such a data set of mixed data types as graphical representation: Each object is characterized by two numerical features, x and y, and three categorical attributes: color with the values \textit{red, green, blue}, symbol with the values \textit{box, triangle} and filling with the values \textit{open, filled}, respectively. Considering only the numerical features of the data set it is not practical to find any clusters so we have to include the categorical attributes into the clustering.
+\\
+Figure 2(a) \cite{scenic} depicts the result of clustering the data with Scenic: The original data set is split up into two subsets: Cluster 1 shows a strong positive correlation of open blue triangles regarding the x- and y- values. Cluster 2 let us observe mixed-type dependencies among numerical and categorical data types. The attributes symbol and filling are dependent on the x-axis: With growing x-value, object attributes change from open box to filled triangle. The color attribute is dependent on the y-axis and changes from red over green to blue with growing y-value.
+\\
+To detect these patterns, Scenic is embedding data objects in a low-dimensional vector space called Attribute-object (AO) space. Each cluster consist of a separate embedding, where the low-dimensional distances between objects and their corresponding attributes are minimized. Figure 2(b) and (c) \cite{scenic} show the embedding of data objects and attributes, separated for better visualization, while in reality objects and attributes are embedded in the same space.
+The objects of Cluster 1 are embedded as well as the attributes characterizing the cluster: x, y and \textit{filled blue triangles}. Discrete categorical attributes like \textit{filled blue triangles} are shown as a single data point, while continuous numerical values are depicted as lines, to keep the order and spacing constraint. The small angle between x and y shows the strong correlation between these two values, as is well known from Principal Component Analysis (PCA).
+Cluster 2 is more dependent on categorical attributes, therefore each possible value of the categorical attributes is plotted in relation to the x and y values. 
+Regarding this visualization of attributes, attribute dependency patterns and therefore the reasons for the clustering of the data objects are obvious and easy to interpret.
+\\
+This visualization let us easily interpret the outcome of the partitioning process and understand why objects are in the same subset while others are not. To sum it up, a cluster is not just a union of data objects with high similarity but also with dependencies between the attributes - and those dependencies give important insight for interpretation.
+\\
+As quality measurement for the AO space, \cite{scenic} proposes the reconstruction of the original data space: The better an AO space explains the original data set, the better the clustering. This leads to the downside that the more clusters with high-dimensionality we create, the better is the prediction accuracy of the original space. As a matter of fact, one high-dimensional cluster per data point perfectly reconstructs the original data objects. However, a lot of clusters with high dimensionality make it impossible to gain any new knowledge about the data and therefore are useless. In order to avoid high  complexity models while still having a good accuracy in predicting the original data space, \cite{scenic} proposes the usage of the MDL principle. The MDL principle balances between goodness-of-fit and model complexity and therefore combines the concepts of predicting the original data space with data compression of the model. This balancing finds the best number of clusters and therefore is a crucial part of the clustering algorithm.
+
+\section{Clustering heterogeneous data}
+Before I continue with the details of the MDL and the Scenic algorithm, I present state-of-the-art clustering technologies for mixed-type data. That knowledge helps to understand the novel contributions of Scenic.
+\\
+The simplest approaches for clustering mixed-type data sets are to either convert the categorical attributes to numerical or vice versa and use numerical- or categorical-data-only cluster algorithms. Both attempts show disadvantages: It is a tough job to find the right conversion from a categorical scale to a numerical scale. Usually there is no distance between categorical attributes, so it is not possible to find order constraints in attributes like zip codes and it is quite hard to compare them to continuous numerical values. The other way around works by discretizing the continuous numerical values, e.g. via equi-width binning. While this is a well-known process, it leads to the loss of information; finding the right bin width is another non trivial challenge.
+\\
+To overcome these drawbacks, there are a few algorithms clustering heterogeneous data without type conversion. The first one is K-prototypes\cite{kprototypes}, a K-means style algorithms, which partitions the data according to a cost function. This cost function computes the distance from each data object to the cluster center and has to be minimized. As previously mentioned, the main difficulty when clustering heterogeneous data is to compare categorical and numerical values and get a reasonable distance measurement. K-prototypes computes the cost function by calculating the distance in two parts: The distance for the numerical attributes and the distance for the categorical attributes. That means that each cluster has two centers, a numerical and a categorical one. 
+\\
+There are a few drawbacks coming with these clustering technique: For categorical attributes, the mode is used for specifying the cluster center. This does not always represent the true cluster center and leads to an information loss, even though it solves the problem that using the mean is not applicable. 
+To calculate the distance between categorical attributes, binary distance is used, which means that two attributes are either 1 for equality or 0 for non-equality. This is a very simple model omitting a lot of information about the data.
+The weight of attributes is another point of critique: While numerical attributes are all weighted by factor 1, categorical attributes are weighted by user defined input. However, not all numerical attributes are equally important, and weighting the categorical attributes by user input can introduce errors into the clustering process. Also, the user has to gain a priori knowledge before the clustering with K-prototypes is even applicable which contradicts to the learning by observations paradigm. Apart from finding an appropriate weighting scheme, the number of clusters has to be defined by the user as well.
+\\
+K-means Mixed\cite{kmixed} is an enhancement to K-prototypes: Still a K-means style algorithms, it tries to solve most drawbacks of K-prototypes' cost function: The categorical cluster center is computed by the proportional distribution of all its values in the cluster which is more accurate than using the mode. The distance between categorical attributes is not only the binary distance but the function of their overall distribution and co-occurance with other attributes. The weighting of an attribute is calculated by the significance of an attribute, i.e. how well separated is any pair of attribute values against all other attributes.
+\\
+That is why K-means Mixed does not require that much user input compared to K-prototypes. Nevertheless, the user has to specify the number of clusters to start the cluster analysis. There are other drawbacks coming with k-means style algorithms: Using a distance function is omitting dependencies between attributes, and therefore an important part of knowledge is just not used. Moreover, the outcome of a clustering can be hard to interpret, when the main information you get is that the objects in a cluster are similar to each other - without knowing why they are similar.
+\\
+A different approach is INCONCO\cite{inconco}. As Scenic, it uses the MDL principle to cluster objects and therefore does not require any input parameters. The optimal attribute weights and relevant attribute dependencies are found by an extended Cholesky decomposition. In comparison to Scenic, INCONCO uses the MDL principle in a different way: the input data is directly compressed and balanced with the model complexity, while Scenic compares the model complexity with the prediction of the original data space from AO space. 
+\\
+The result of INCONCO clustering is interpretable due to linear models and case-by-case analysis which depicts attribute dependencies as probability tables. Unfortunately, INCONCO has a restricted cluster model: Each category of categorical attributes having a dependency with numerical values need to have a different Gaussian distribution of the data. Therefore, INCONCO is not applicable to all data sets, as we see later in the experiment section.
+\\
+Being aware of existing cluster algorithms for mixed-type data I introduce the novelties provided by Scenic: Using the idea of a low-dimensional space as proposed in \cite{gliffy}, the AO space integrates attribute dependencies between heterogeneous data types into clustering. Moreover, it is the tool for visualization and interpretation of the clustering, which is highly relevant, to not only find major trends in data sets, but also to explain these.
+\\
+As INCONCO, Scenic is using the MDL principle for parameter-free clustering, but in different way: While INCONCO compresses the input data, Scenic compares classification with data compression and balances between prediction accuracy from the AO space to the original space and model complexity. That way allows the algorithm to detect suitable AO spaces without overfitting. The actual clusters are then found in a recursive, top-down splitting manner.
+
+\section{Detecting a good AO space using the MDL principle}
+After describing the properties of an AO space in Definition 1\cite{scenic}, a quality measurement for a good AO space is discussed. The paper proposes the concept of predicting the original data space from AO space as key concept and calls it unsupervised classification. As already depicted, the concept of prediction alone is not an achievable optimization goal since each data object in a single, high-dimensional cluster would actually lead to the best result. Singleton clusters are not suitable for interpretation because they do not provide any new knowledge and therefore classification needs a counterpart to prevent overfitting. 
+\\
+The contrary to high prediction accuracy is the compact compression of models which is known as the MDL principle. Therefore we try to find a clustering which allows to predict the original space with high accuracy without producing a lot of clusters, i.e. a model which is compact for compression. In a formal way, the description length DL of a cluster i is defined by the reconstruction error RE, which is the error occurring when predicting the original space, and MC, the complexity of the cluster model:
+\begin{equation*}
+DL(C_i) = RE_{C_i} + MC_{C_i}
+\end{equation*}
+Since we try to find a clustering which partitions the objects into subsets so that the reconstruction error as well as the model complexity are minimized, the cluster objective is
+\begin{equation*}
+min \sum_{C_i \in C} {DL(C_i)}.
+\end{equation*}
+\\
+Calculating the reconstruction error $RE_{C_i}$ denotes the number of bits required to reconstruct the original data space, which means the original attribute values (numerical and categorical) of all the objects in cluster $C_i$. 
+For categorical attributes, Bayes's theorem is used to compute the probability to observe $a$ given the representation $\pi(x)$ of $x$ in AO space:
+\begin{equation*}
+p(a|\pi(x)) =  \frac{p(a) \cdot p(\pi(x)|a)}{p(\pi(x))}
+\end{equation*}
+The probability to observe $\pi(x)$ given category $a$ can be calculated using a Gaussian PDF $\mathcal{N}_a(\mu_a, \Sigma_a)$ with diagonal covariance. In the AO space, each category $a$ is embedded at the center of all objects having the value $a$ which leads to a common variance among all category centroids. Additionally, we can consider each dimension separately because of the orthogonality of AO dimensions, and therefore a spherical Gaussian with diagonal covariance can be used:
+\begin{equation*}
+p(\pi(x)|a) = (2\pi)^{-\frac{d_v}{2}} \cdot |\Sigma_a|^{-\frac{1}{2}} \cdot exp^{(\pi(x)-\mu_a)^{t} \cdot \Sigma_a^{-1} \cdot (\pi(x) - \mu_a)} 
+\end{equation*}
+Moreover, $p(a)$  and $p(\pi(x)|a)$ are calculated the following way:
+$p(a) = \frac{|a|}{n}$, where $|a|$ is the number of values for the categorical attributes and $n$ is the number of objects. 
+$p(\pi(x)) = \sum_{a \in A} {p(\pi(x)|a)}$ using conditional probability.
+\\
+By nature, a good AO space predicts the original attribute value with high accuracy. Therefore $p(a_x|\pi(x))$ is almost 1 if $a$ is the true category of $x$ and almost 0 for the remaining categories of attribute $A$. 
+\\
+To get the reconstruction error for categorical attributes, Huffman coding is used to get the error in bits for all objects in a cluster $C_i$ and all its categorical attributes, leading to
+\begin{equation*}
+RE_{cat} = \Sigma_{x \in C_i} \Sigma_{A_{cat}} -log_2(p(a_x|\pi(x))).
+\end{equation*}
+\\
+Computing the reconstruction error $RE_{num}$ for numerical attributes is done by multivariate regression: For a numerical attribute $B$ of the objects in a cluster $C_i$, the coordinates of the objects in AO space are used as regressors and the original attribute values $C_{i,B}$ correspond to the dependent variable, while $\beta$ depicts the model coefficient:
+\begin{equation*}
+C_{i,B} = \pi(C_i) \cdot \beta_B + \epsilon_B,
+\end{equation*}
+which is the standard linear regression with a Gaussian error distribution. 
+The coding cost of the reconstruction error is therefore the negative log-likelihood of the Gaussian error distribution of all objects and attributes:
+\begin{equation*}
+RE_{num} = \Sigma_{x \in C_i} \Sigma_{A_{num}} -log_2(\frac{1}{\sigma _{\in A} \sqrt{2\pi}} exp ^{-\frac{(x-\mu_{\in A})^{2}}{2\sigma_{\in A}^{2}}}).
+\end{equation*}
+To get the overall reconstruction error we simply sum up the numerical and categorical errors:
+\begin{equation*}
+RE_{C_i} = RE_{cat} + RE_{cat}.
+\end{equation*}
+Besides the reconstruction error we need to specify the model complexity of the clusters which is the sum of the model parameters and the id-cost. The id-cost is the cluster label for each object using Huffman coding: $ID_{cost} = |C_i| \cdot log_2(\frac {n} {|C_i|})$. The encoded model parameters are estimated by $P_{cost} = \frac{|m|}{2} \cdot log_2|C_i|$ where $|m|$ is the number of model parameters. These are computed by the costs required to encode 1) the object representations $d_v \cdot n$, which is the number of dimensions in the AO space times the number of objects, 2) the category means and variances $2 \cdot d_v \cdot |cat|$, and 3) the linear models of numerical attributes, i.e. the model coefficients $\beta$, $d_v \cdot d_n$, which leads to
+\begin{equation*}
+|m| = d_v \cdot n + 2 \cdot d_v \cdot |cat| + d_v \cdot d_n.
+\end{equation*} 
+This results in an overall model complexity  of 
+\begin{equation*}
+MC_{C_i} = P_{cost} + ID_{cost}.
+\end{equation*}
+\\
+\section{Algorithm Scenic}
+After describing the clustering objective by specifying the MDL, \cite{scenic} continues with the actual algorithm: First, to build an AO space, and second by wiring everything together. 
+
+\subsection{Building an AO Space}
+Regarding the MDL consisting of prediction and data compression, it is obvious that objects in the AO space must be embedded as close as possible to the embeddings of their own attribute values and as far away from attribute values they do not have. \cite{scenic} uses as example an object having the value \textit{blue} for the categorical attribute \textit{color}. Therefore, its location in AO space should be as close as possible to the embedding of the category \textit{blue} and as far away from the category embeddings \textit{red} and \textit{green}. 
+\\
+To achieve this very typical requirement in clustering, the usage of Princals\cite{gliffy} is proposed, like K-means a least squares algorithm. For initialization, all object coordinates are chosen randomly and get column centered and orthogonalized to avoid trivial solutions where all objects are embedded to the same location. Then, two steps are executed until convergence: Step 1 computes the coordinates of attributes values as the mean of all objects having this value. To satisfy the order and spacing constraint of numerical attribute values, the location is corrected by linear regression using the original attribute values as regressors. After computing the coordinates of the attribute values, step 2 determines the object coordinates by the mean of all attribute values the object belongs to. Afterwards, the object coordinates are orthogonalized by using the Gram-Schmidt procedure.
+
+\subsection{Clustering with Scenic}
+After presenting an algorithm for building a suitable AO space, the algorithm Scenic is introduced to combine the MDL principle and the AO space into one program. Scenic uses a top-down, recursive splitting strategy for parameter-free clustering as shown by Figure 3 \cite{scenic} in pseudo code.
+\\
+Scenic itself consists of three subroutines, \textit{REC-SPLIT}, \textit{k-Scenic} and \textit{INITIALIZATION}. For initialization, Scenic invokes \textit{k-Scenic(1)}, resulting in one cluster and therefore one AO space. Afterwards, \textit{REC-SPLIT} is used for top-down splitting the initial cluster into two clusters. For that purpose, a 2-dimensional Princals is used. First, object clusters for each category combination are obtained. The most similar category combinations are merged until only two clusters are remaining. Two category combinations are merged by replacing their multivariate Gaussians with the representative having minimal Kulback-Leibler divergence to both of them. 
+\\
+Having these two clusters, each object is assigned to the cluster where it has minimal coding cost. Moreover, the cluster model and thus the AO space get updated. The recursive split results in two clusters, and the sum of the MDL of these two clusters is compared with the MDL of the previous, single cluster. If the MDL is minimized, the two clusters are contained and a new recursive split is applied, now on both of the new clusters, otherwise the single cluster is returned. In the end, the best AO dimensionality of each individual cluster is determined by the MDL.
+\\
+The runtime complexity of Scenic is given as $n \cdot |iter_{kSc}| \cdot (|iter_P| \cdot nd_v^2 )$, where $iter_{kSc}$ is the number of iterations within k-Scenic and $iter_P$ the number of iterations within Princals. $nd_v^2$ is the runtime of the Gram-Schmidt orthogonalization. \cite{scenic} specifies the number of iterations as small (about 10-50 iterations) which leads to an efficient algorithm.
+
+\section{Experiments}
+\cite{scenic} performs several experiments and compares Scenic with INCONCO and K-means Mixed as state-of-the-art technologies for clustering mixed-type data sets. The quality criteria of the cluster analysis is the Normalized Mutual Information (NMI)\cite{nmi} using a ground truth and scaling between 0 and 1, where 1 stands for a perfect clustering.
+\subsection{Made up Data Set}
+The first data set was already presented in Figure 1\cite{scenic}. It is a made up data set consisting of 1000 objects with 500 objects in cluster 1 and 500 in cluster 2. The data set has five dimensions, two numerical and three categorical. Scenic is the only technique finding both clusters with an NMI of 1.0. Besides, the AO space gives a good visualization and interpretation result and it is obvious, why the clustering has been done in that way: The numerical dependencies in cluster 1 as well as the categorical dependencies in cluster 2 are detected.
+\\
+K-means Mixed has the second best result with an NMI of 0.71 as depicted in Figure 4(b)\cite{scenic}. The clustering is guided by the attribute color: Cluster 1 consists of blue objects, Cluster 2 of the remaining red and green objects. While color is a good separator, it does not include attribute dependencies into the clustering process: The wrongly assigned blue objects to Cluster 1 do not correlate among the x- and y-axis and therefore do not really fit into Cluster 1.
+\\
+The same result is achieved with standard k-means with binarized categorical attributes. By usage of the two numerical attributes only, an NMI of 0.18 is achieved, which shows how important the categorical attributes are for the cluster analysis. K-modes for categorical clustering with  discretized numerical values leads to an NMI of 0.33 using 10 equidistant bins, c.f. Figure 4(c)\cite{scenic}. Omitting the numerical values and running k-modes only on the categorical attributes results in an NMI of 0.27.
+\\
+As we know, INCONCO is able to detect mixed-type attribute dependencies with a special dependency model: All categories of the involved categorical attributes must have a unique numerical data distribution which is modelled by a separate Gaussian for each single category. Let us consider Cluster 2 in Figure 1\cite{scenic} where we observe a transition from open boxes to filled triangles. The dependency involves the categorical attributes \textit{filling} and \textit{symbol}, but not with all possible combinations. INCONCO would model this dependency by having an own Gaussian for open boxes and filled triangles as well as for filled boxes and open triangles, combinations that do not occur in the data. Therefore, the assumption of having a unique Gaussian for each category does not fit regarding the data distribution. 
+\\
+Since INCONCO is using the MDL principle and is therefore parameter free, it detects the number of cluster automatically - unfortunately, it detects only one cluster since the data does not fit to the model assumptions which results in an NMI of 0. To compare INCONCO with the other clustering techniques, \cite{scenic} uses the force-split option to split the data into two clusters getting an NMI of 0.32, c.f. Figure 4(d)\cite{scenic}.
+\\
+Regarding the runtime, Scenic is faster than K-means Mixed, but slower than INCONCO, K-means and K-modes. \cite{scenic} uses for benchmarking a data set of 5000 objects with a data distribution as described above. Scenic needs 28 seconds for clustering, K-means Mixed 134 seconds, INCONCO, K-modes and K-means less than a second.
+\subsection{Real Data Sets}
+After experiments on a made up data set, \cite{scenic} uses two real data sets hosted by the UCI Machine Learning repository\cite{uci}, and tests Scenic, K-means Mixed and INCONCO. Due to bad results, K-means and K-modes have been omitted.
+\\
+The \textbf{abalone data set} consists of 4,177 objects with nine dimensions: The categorical attribute sex with three values male, female and infant, as well as eight numerical attributes as depicted in Figure 5\cite{scenic}. The integer-valued attribute rings, which refers to the age of the animal is used as an evaluation criterion as well as the difference between the variance of clusters. Since there is no ground truth, the use of an NMI is not feasible.
+\\
+Clustering with Scenic detects four clusters corresponding to the attribute sex, which results to subsets of infants, females and males. Moreover, the male animals are split up into two subsets because Scenic identifies two different attribute dependency patterns.
+The grouping into sex-pure clusters is supported when evaluating the rings attribute. \cite{scenic} is running a two-sample t-test on the ring distribution of each pair of clusters assuming unequal variance, corrected with Bonferroni for multiple comparisons. This shows that each pair of clusters exhibits a significant difference between the number of rings (apart from mature males to females). Therefore it was right to partition the data set by the attribute sex as well as splitting up the male cluster.
+\\
+K-means Mixed with $k = 4$ separates most of the infants from the rest of the data. The other cluster contains equally distributed females, males and the remaining infants. Using a two sample t-test as above, the clustering seems to be suitable since all pairs of clusters show significant differences.
+\\
+Since K-means Mixed does not support attribute dependencies and does not provide information other than the grouping of data objects into subsets, it is hard to interpret why objects are grouped together and which attributes are crucial for the clustering.
+\\
+Using INCONCO, no input parameters are necessary to define because of the MDL principle. However, INCONCO detects 25 clusters, none of them representing a particular sex. Also regarding the number of rings, the result is not specific. Due to the fact that INCONCO finds a lot of small clusters and does not provide visual representation, the result is very difficult to interpret. 
+\\Therefore, Scenic provides the best result on that data set: A significant difference between the clusters as well as a visual representation to understand the attribute dependency pattern.
+\\
+The \textbf{acute inflammations data set} consists of 120 data objects each represented by six attributes. Only the temperature is continuous numerical, the other five attributes are of binary value. Two binary attributes are used as evaluation criteria. Scenic detects five clusters with an NMI of 0.24 with respect to evaluation attribute 1 and an NMI of 0.43 with respect to evaluation attribute 2. The categorical cluster attribute corresponds well to the diagnosis \textit{nephritis}, and the objects are well separated according to the diagnosis \textit{inflammation of the bladder} in the leading dimensions of the AO space.
+\\
+INCONCO detects 4 clusters with an NMI of 0.11 regarding evaluation attribute 1 and 0.52 regarding evaluation attribute 2. Scenic and INCONCO both detect class-pure clusters regarding evaluation attribute 2. The outcome that INCONCO's NMI on evaluation attribute 2 is higher than Scenic's is explained by the fact that Scenic finds one more cluster than INCONCO - detecting more clusters while having binary attribute values leads to negative results regarding the NMI.
+Yet, a parametrized K-means Mixed results in a poor NMI of 0.007 with respect to evaluation attribute 1 and an NMI of 0.20 with respect to evaluation attribute 2.
+\\
+To conclude, only Scenic leads to the best result regarding both evaluation attributes. Moreover, a good explanation of the clustering is provided by the embedding of attributes and objects into AO space.
+
+\section{Paper evaluation}
+In this section I evaluate \cite{scenic} and show positive and negative aspects of the paper. Considering that it is already an accepted paper presented at the ACM SIGKDD conference on Knowledge Discovery and Data Mining in Beijing, 2012, of course the positive aspects outweigh the negative ones. Thus, there are a few points which could have been stated clearer. 
+\\
+The abstract is a smooth approach to introduce the topic of clustering heterogeneous data to the reader showing one of the main reasons for clustering - the spotting of trends in an unknown set of data. Showing drawbacks in existing techniques and explaining why these points are crucial for good cluster analysis is the next step to motivate the reader and, moreover, shows the interesting novelties of the paper. 
+\\
+Before getting to much into technical details, Figure 1\cite{scenic} prescribes a heterogeneous data set with numerical and categorical values. Hard to partition the data into subsets just by looking at it, Figure 2\cite{scenic} provides a clustering by Scenic which makes the clusters obvious. Due to the embedding of objects and attributes it is very easy to explain why the data is clustered in that way - and the importance of attribute dependencies, visualization and good interpretation gets clear. So far, the main points of the paper are revealed and the reader is motivated to learn more about the actual implementation.
+\\
+After understanding the key idea of the AO space and attribute dependencies, the idea of balancing prediction of the original space from AO space and an appropriate data compression are introduced. However, the introduction of the term \textit{unsupervised classification} is a bit confusing because not used like that in literature. To my best knowledge, \textit{unsupervised classification} means predicting the original attributes from the AO space, and therefore is nothing more than a typical classification problem, in that case in the context of unsupervised learning. Hence a proper definition would have been useful. Nevertheless, the idea behind classification and data compression is well explained.
+\\
+Section 2 describes the properties of the AO space in mathematical formalism and explains them on the example AO space in Figure 2\cite{scenic}, which makes the formalism very intuitive. Then, the idea of unsupervised learning and data compression, leading to the MDL principle, is continued. The main idea of the paper, which is responsible for finding good AO spaces, is then stated by the respective mathematical formulas in comprehensive manner.
+\\
+Section 3 describes the algorithm Scenic, first by using the algorithm Princals for detecting a suitable AO-space. Not only the algorithm is explained, but also the intention behind: To embed an object as close to an attribute value it owns, and as far away from an attribute value it does not own. This is a very typical process in clustering and helps the reader to understand the new algorithm. Afterwards, Scenic is explained in pseudo code and by textual explanation. While the idea of the algorithm using a recursive top-down splitting strategy integrating the MDL and the AO space is straightforward, some details are hard to figure out. The initialization strategy obtains clusters for each category combination. How Scenic computes these clusters for each category combination is not explained but seems to be interesting regarding the runtime. In general, the description of the runtime is shallow: For the iterations of k-Scenic and Princals, no Landau-Notation is given, only the empiric result, that the number of iterations is usually small. Therefore, \cite{scenic} claims the algorithm to be efficient.
+\\
+The practical use of Scenic is then exposed by several experiments, where Scenic is compared to other state-of-the-art technologies in clustering heterogeneous data. Due to the explanations of the data sets and the clustering results, the enhancements provided by Scenic gets obvious and, as side effect, the understanding of the cluster technique gets even better. However, it would be interesting to know, which test environment and implementation of the algorithms have been used. The same is true for the running time: Only in one out of three examples, the running time is exposed. Since Scenic is not the fastest, this information would be interesting. Regarding the \textit{Acute Inflammations Data}, K-means Mixed is configured to detect two clusters which results in a bad result - information about results when detecting four or five clusters as INCONCO and Scenic is not given. In general, precise test result tables would provide quality information and make the outcome more comparable.
+\\
+After presenting the experiment results, related work is discussed allowing the reader to gain further knowledge about the topic. The paper concludes with an outlook for further research and enhancement of Scenic, which depicts the importance of Scenic's concepts to other fields like outlier detection or fuzzy clustering.
+\\
+In my opinion, \textit{Dependency Clustering Across Measurement Scales} 
+ is a well organized paper introducing the idea of a low-dimensional space  and the respective MDL for clustering heterogeneous data. The central theme of clustering mixed-type data using the AO space is always present and supported by examples and experiments, which makes it easy to follow and to understand. Moreover, the comparison of Scenic with other state-of-the-art technologies in clustering heterogeneous data gives a good overview on this field of knowledge discovery.
+\section{Conclusion}
+In this work I have given a summary and discussion of \cite{scenic}, an algorithm for clustering heterogeneous data.
+To get a better understanding of the field of clustering heterogeneous data types, state-of-the-art technologies are illustrated and the differences to Scenic are exposed. The novelties and key ideas of Scenic are presented and critically evaluated.
+\\
+In conclusion, Scenic shows big benefits in the interpretation of the results and in integrating attribute dependencies into clustering. As \cite{scenic} explains, there are still many open challenges remaining: Objects may belong to several clusters instead of one distinct cluster, therefore fuzzy and subspace clustering are highly interesting. The same is true for outlier detection regarding attribute dependencies. Introducing further types of attributes like hierarchical and relational information is another goal for further enhancement.
+
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{20}
+%Example: Paper
+\bibitem{scenic}C. Plant. Dependency clustering across measurement scales. In \textit{KDD}, pages 361-369, 2012.
+
+\bibitem{uci} A. Frank and A. Asuncion. UCI machine learning repository, 2010.
+
+\bibitem{kprototypes}Z. Huang. Extensions to the k-means algorithm for clustering large data sets with categorical values. \textit{Data Min. Knowl. Discov.,} 2(3):283–304, 1998.
+
+\bibitem{kmixed}A. Ahmad and L. Dey. A k-mean clustering algorithm for mixed numeric and categorical data. \textit{Data Knowl. Eng.,} 63(2):503–527, 2007.
+
+\bibitem{inconco}C. Plant and C. Böhm. Inconco: interpretable clustering of numerical and categorical objects. In \textit{KDD}, pages 1127–1135, 2011.
+
+\bibitem{gliffy}G. Michailidis and J. de Leeuw. The gifi system of descriptive multivariate analysis. \textit{STATISTICAL SCIENCE}, 13:307–336, 1998.
+
+\bibitem{nmi}N. X. Vinh, J. Epps, and J. Bailey. Information theoretic measures for clusterings comparison: is a correction for chance necessary? In \textit{ICML}, pages 1073–1080, 2009.
+
+\bibitem{dmconcept_cluster}J. Han, M. Kamber and J. Pei. Data Mining: Concepts and Techniques, 3rd ed., Morgan Kaufmann Publishers, pages 443-457, 2011.
+
+\bibitem{dmconcept_datatypes}J. Han, M. Kamber and J. Pei. Data Mining: Concepts and Techniques, 3rd ed., Morgan Kaufmann Publishers, pages 39-44, 2011.
+\end{thebibliography}
+\end{document}
